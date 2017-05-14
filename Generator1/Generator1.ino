@@ -33,7 +33,7 @@ Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> osc1(SIN2048_DATA);
 
 LowPassFilter lpf;
 
-#define CONTROL_RATE 64
+#define CONTROL_RATE 255
 
 void setup() {
     pinMode(wave_type_pin, INPUT);
@@ -65,7 +65,7 @@ void updateControl() {
     }
     
     // update pitch
-    temp = map(mozziAnalogRead(pitch_pin), 0, 1023, 20, 700);
+    temp = map(mozziAnalogRead(pitch_pin), 0, 1023, 20, 22000);
     if (g_pitch != temp) {
         g_pitch = temp;
         osc1.setFreq(g_pitch);
@@ -78,6 +78,23 @@ void updateControl() {
     }
 
     // wave type selection
+    if (digitalRead(wave_type_pin) == HIGH && !buttonClicked) {
+        if (SERIAL_DEBUG) {
+            Serial.println("Click");
+        }
+
+        g_next_wave_type = (g_next_wave_type + 1) % (WAVE_TYPES);
+        
+        buttonClicked = true;
+    }
+
+    if (digitalRead(wave_type_pin) == LOW && buttonClicked) {
+        if (SERIAL_DEBUG) {
+            Serial.println("Clack");
+        }
+        buttonClicked = false;
+    }
+    
     if (g_wave_type != g_next_wave_type) {
         switch(g_next_wave_type) {
           case 0:
@@ -118,7 +135,6 @@ void updateControl() {
     }
 
     // update lpf resonance
-    /*
     temp = map(mozziAnalogRead(lpf_resonance_pin), 0, 1023, 0, 255);
     if (g_lpf_resonance != temp) {
         g_lpf_resonance = temp;
@@ -130,34 +146,14 @@ void updateControl() {
             Serial.print("\n");
         }
     }
-    */
     
 }
 
 int updateAudio() {
-    //char sig = lpf.next(osc1.next() * g_volume);
-    //return  (int) sig >> 8;
-    return (lpf.next(osc1.next()) * g_volume) >> 8;
+    return (osc1.next() * g_volume) >> 8;
+    //return (lpf.next(osc1.next()) * g_volume) >> 8;
 }
 
-void loop() {
-
-    if (digitalRead(wave_type_pin) == HIGH && !buttonClicked) {
-        if (SERIAL_DEBUG) {
-            Serial.println("Click");
-        }
-
-        g_next_wave_type = (g_next_wave_type + 1) % (WAVE_TYPES);
-        
-        buttonClicked = true;
-    }
-
-    if (digitalRead(wave_type_pin) == LOW && buttonClicked) {
-        if (SERIAL_DEBUG) {
-            Serial.println("Clack");
-        }
-        buttonClicked = false;
-    }
-  
+void loop() {  
     audioHook();
 }
