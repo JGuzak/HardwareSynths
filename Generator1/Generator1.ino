@@ -29,12 +29,7 @@ int g_lpf_frequency = 0, g_lpf_resonance = 10;
 
 bool buttonClicked = false;
 
-Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> sin1(SIN2048_DATA);
-Oscil <TRIANGLE2048_NUM_CELLS, AUDIO_RATE> tri1(TRIANGLE2048_DATA);
-Oscil <SQUARE_NO_ALIAS_2048_NUM_CELLS, AUDIO_RATE> sqr1(SQUARE_NO_ALIAS_DATA);
-Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> saw1(SAW2048_DATA);
-
-Oscil* curOsc;
+Oscil <SIN2048_NUM_CELLS, AUDIO_RATE> osc1(SIN2048_DATA);
 
 LowPassFilter lpf;
 
@@ -42,10 +37,8 @@ LowPassFilter lpf;
 
 void setup() {
     pinMode(wave_type_pin, INPUT);
-
-    curOsc = sin1;
     
-    curOsc.setFreq(g_pitch);
+    osc1.setFreq(g_pitch);
     lpf.setCutoffFreq(g_lpf_frequency);
     lpf.setResonance(g_lpf_resonance);
     
@@ -88,16 +81,16 @@ void updateControl() {
     if (g_wave_type != g_next_wave_type) {
         switch(g_next_wave_type) {
           case 0:
-              curOsc = sin1;
+              osc1.setTable(SIN2048_DATA);
               break;
           case 1:
-              curOsc = tri1;
+              osc1.setTable(TRIANGLE2048_DATA);
               break;
           case 2:
-              curOsc = sqr1;
+              osc1.setTable(SQUARE_NO_ALIAS_2048_DATA);
               break;
           case 3:
-              curOsc = saw1;
+              osc1.setTable(SAW2048_DATA);
               break;
           default:
               break;
@@ -142,9 +135,9 @@ void updateControl() {
 }
 
 int updateAudio() {
-    //char sig = lpf.next(curOsc.next() * g_volume);
+    //char sig = lpf.next(osc1.next() * g_volume);
     //return  (int) sig >> 8;
-    return (lpf.next(curOsc.next()) * g_volume) >> 8;
+    return (lpf.next(osc1.next()) * g_volume) >> 8;
 }
 
 void loop() {
